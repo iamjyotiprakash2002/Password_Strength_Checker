@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>🛡️ Password Strength Checker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+        }
+
+        .card {
+            border-radius: 16px;
+            padding: 25px;
+            border: none;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .alert-warning ul {
+            padding-left: 1.2em;
+        }
+
+        .progress {
+            height: 25px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 25px;
+        }
+
+        .list-group-item {
+            border: none;
+            background-color: #f8f9fa;
+        }
+
+        .alert-info {
+            background-color: #e8f0ff;
+            border-color: #d0e2ff;
+            color: #1a237e;
+        }
+
+        .footer-note {
+            font-size: 13px;
+            color: #777;
+        }
+
+        :root {
+    --bg-color: #f4f6f8;
+    --text-color: #000000;
+    --card-bg: #ffffff;
+    --alert-bg: #fff3cd;
+    --alert-text: #664d03;
+    --input-bg: #ffffff;
+    --footer-color: #777;
+}
+
+body.dark-mode {
+    --bg-color: #000000;
+    --text-color: #f0f0f0;
+    --card-bg: #0eee06;
+    --alert-bg: #3b3b4f;
+    --alert-text: #ffc;
+    --input-bg: #383850;
+    --footer-color: #aaa;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.card {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.alert-warning {
+    background-color: var(--alert-bg);
+    color: var(--alert-text);
+}
+
+.alert-info {
+    background-color: #2c3e50;
+    color: #dfe6e9;
+}
+
+.form-control {
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid #ccc;
+}
+
+.footer-note {
+    color: var(--footer-color);
+}
+
+
+    </style>
+</head>
+<body>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-10">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="mb-4 text-center">🛡️ Password Strength Checker</h2>
+
+                    <div class="text-end mb-3">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="toggleDarkMode()">
+                            🌙 Toggle Dark Mode
+                        </button>
+                    </div>
+                    
+
+                    <!-- Awareness Section -->
+                    <div class="alert alert-warning mb-4">
+                        <h5 class="mb-2">🔐 Why Strong Passwords Matter</h5>
+                        <div id="typingAwareness" style="white-space: pre-wrap; font-family: monospace;"></div>
+                    </div>
+                    
+
+                    <!-- Password Input -->
+                    <form method="post">
+                        <div class="mb-3">
+                            <input type="text" name="password" id="passwordInput" class="form-control form-control-lg" placeholder="Enter your password..." required>
+                        </div>
+
+                        <!-- Strength Meter -->
+                        <div class="mb-3">
+                            <label class="form-label">Live Strength Meter:</label>
+                            <div class="progress">
+                                <div id="strengthBar" class="progress-bar bg-danger" role="progressbar" style="width: 0%">Weak</div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">🔍 Check Strength</button>
+                    </form>
+
+                    <!-- Score & Feedback -->
+                    {% if score is not none %}
+                        <div class="mt-4">
+                            <h5 class="mb-3">🔎 Strength Score: {{ score }}/5</h5>
+                            <ul class="list-group">
+                                {% for item in feedback %}
+                                    <li class="list-group-item">✅ {{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <!-- Suggested Stronger Password -->
+                    {% if suggestion %}
+                        <div class="alert alert-info mt-4">
+                            💡 <strong>Try this stronger version:</strong><br>
+                            <code>{{ suggestion }}</code>
+                        </div>
+                    {% endif %}
+
+                    <!-- Footer Note -->
+                    <p class="text-center mt-4 footer-note">
+                        📌 This tool is for cybersecurity awareness and educational use only.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JS: Live Password Strength Meter -->
+<script>
+    const passwordInput = document.getElementById("passwordInput");
+    const strengthBar = document.getElementById("strengthBar");
+
+    passwordInput.addEventListener("input", function () {
+        const password = this.value;
+        let strength = 0;
+
+        if (password.length >= 8) strength += 1;
+        if (/[a-z]/.test(password)) strength += 1;
+        if (/[A-Z]/.test(password)) strength += 1;
+        if (/\d/.test(password)) strength += 1;
+        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+
+        const percent = (strength / 5) * 100;
+        strengthBar.style.width = percent + "%";
+
+        if (strength <= 2) {
+            strengthBar.className = "progress-bar bg-danger";
+            strengthBar.textContent = "Weak";
+        } else if (strength <= 4) {
+            strengthBar.className = "progress-bar bg-warning text-dark";
+            strengthBar.textContent = "Moderate";
+        } else {
+            strengthBar.className = "progress-bar bg-success";
+            strengthBar.textContent = "Strong";
+        }
+    });
+</script>
+<script>
+    function toggleDarkMode() {
+        document.body.classList.toggle("dark-mode");
+        localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+    }
+
+    // Apply saved theme on load
+    window.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+            document.body.classList.add("dark-mode");
+        }
+    });
+</script>
+
+<script>
+    const awarenessLines = [
+        "• Strong passwords protect your data from breaches.",
+        "• Weak passwords can be cracked in seconds.",
+        "• Use uppercase, lowercase, numbers & symbols.",
+        "• Never reuse passwords across different sites.",
+        "• Use a password manager to stay safe and organized."
+    ];
+
+    const typingElement = document.getElementById("typingAwareness");
+
+    let lineIndex = 0;
+    let charIndex = 0;
+
+    function typeLine() {
+        if (lineIndex < awarenessLines.length) {
+            const line = awarenessLines[lineIndex];
+            if (charIndex < line.length) {
+                typingElement.innerHTML += line.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeLine, 40); // typing speed
+            } else {
+                typingElement.innerHTML += '\n';
+                charIndex = 0;
+                lineIndex++;
+                setTimeout(typeLine, 600); // delay between lines
+            }
+        }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        setTimeout(typeLine, 300);
+    });
+</script>
+
+
+</body>
+</html>
